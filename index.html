@@ -9,7 +9,6 @@
 <body>
 
 <div class="player">
-
     <h2 id="heading">FOLDERS</h2>
 
     <button id="back" hidden>← BACK</button>
@@ -18,39 +17,20 @@
 
     <div id="playlist" hidden>
         <h3 id="playlistTitle"></h3>
-
         <div id="songs"></div>
 
         <button id="addSongs">＋ ADD SONGS</button>
-
-        <input
-            id="songInput"
-            type="file"
-            accept=".mp3,audio/*"
-            multiple
-            hidden
-        >
+        <input id="songInput" type="file"
+            accept=".mp3,audio/mpeg" multiple hidden>
     </div>
 
     <div class="import">
-
-        <label for="folderInput" id="importFolder">
-            ＋ IMPORT FOLDER
-        </label>
-
-        <input
-            id="folderInput"
-            type="file"
-            webkitdirectory
-            multiple
-            hidden
-        >
-
+        <button id="importFolder">＋ IMPORT FOLDER</button>
+        <input id="folderInput" type="file"
+            webkitdirectory directory multiple hidden>
     </div>
-
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
