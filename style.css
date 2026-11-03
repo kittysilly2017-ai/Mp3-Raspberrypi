@@ -44,16 +44,10 @@ h2 {
 .folder-name {
     font-size: 19px;
     color: black;
-    overflow-wrap: anywhere;
 }
 
 #playlist {
     margin-top: 25px;
-}
-
-#playlistTitle {
-    color: #192d4c;
-    font-size: 25px;
 }
 
 .song {
@@ -87,10 +81,7 @@ h2 {
     gap: 8px;
 }
 
-.import button,
-#addSongs,
-#importFolder {
-    display: inline-block;
+.import button {
     padding: 13px 18px;
     border: 2px solid #9c75bd;
     background: #d9b8ed;
@@ -98,45 +89,8 @@ h2 {
     font-family: Arial, sans-serif;
     font-size: 16px;
     cursor: pointer;
-    color: black;
 }
 
-#addSongs {
-    margin-top: 20px;
-}
-
-#back {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 15px;
-}
-
-button:active,
-#importFolder:active {
+button:active {
     opacity: 0.7;
-}
-
-[hidden] {
-    display: none !important;
-}
-
-@media (max-width: 600px) {
-    body {
-        padding: 12px;
-    }
-
-    .player {
-        padding: 35px 20px;
-    }
-
-    h2 {
-        font-size: 28px;
-    }
-
-    .folders {
-        gap: 20px;
-    }
 }
