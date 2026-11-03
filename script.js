@@ -8,7 +8,7 @@
 
 let db;
 
-const request = indexedDB.open("MusicPlayerDB", 3);
+const request = indexedDB.open("MusicPlayerDB", 4);
 
 request.onupgradeneeded = function(event) {
     const database = event.target.result;
@@ -42,7 +42,11 @@ request.onsuccess = function(event) {
 };
 
 request.onerror = function() {
-    alert("Could not open music storage.");
+    alert("Could not open music storage: " + request.error);
+};
+
+request.onblocked = function() {
+    alert("Please close other tabs of this music player and reload.");
 };
 
 // ========================================
@@ -84,6 +88,7 @@ function saveSong(song) {
 
         transaction.oncomplete = resolve;
         transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
     });
 }
 
@@ -97,31 +102,28 @@ function savePlaylist(name) {
 
         transaction.oncomplete = resolve;
         transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
     });
 }
 
 function getPlaylists() {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction("playlists", "readonly");
-        const request = transaction.objectStore("playlists").getAll();
+        const getRequest = transaction.objectStore("playlists").getAll();
 
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        getRequest.onsuccess = () => resolve(getRequest.result);
+        getRequest.onerror = () => reject(getRequest.error);
     });
 }
 
 function getSongs(folderName) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction("music", "readonly");
+        const index = transaction.objectStore("music").index("folder");
+        const getRequest = index.getAll(folderName);
 
-        const index = transaction
-            .objectStore("music")
-            .index("folder");
-
-        const request = index.getAll(folderName);
-
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        getRequest.onsuccess = () => resolve(getRequest.result);
+        getRequest.onerror = () => reject(getRequest.error);
     });
 }
 
@@ -130,31 +132,36 @@ function getSongs(folderName) {
 // ========================================
 
 async function renderFolders() {
-    const playlists = await getPlaylists();
+    try {
+        const playlists = await getPlaylists();
 
-    foldersDiv.innerHTML = "";
+        foldersDiv.innerHTML = "";
 
-    playlists.forEach(playlist => {
-        const button = document.createElement("button");
-        button.className = "folder";
+        playlists.forEach(playlist => {
+            const button = document.createElement("button");
+            button.className = "folder";
 
-        const icon = document.createElement("span");
-        icon.className = "folder-icon";
-        icon.textContent = "📁";
+            const icon = document.createElement("span");
+            icon.className = "folder-icon";
+            icon.textContent = "📁";
 
-        const name = document.createElement("span");
-        name.className = "folder-name";
-        name.textContent = playlist.name;
+            const name = document.createElement("span");
+            name.className = "folder-name";
+            name.textContent = playlist.name;
 
-        button.appendChild(icon);
-        button.appendChild(name);
+            button.appendChild(icon);
+            button.appendChild(name);
 
-        button.onclick = function() {
-            openFolder(playlist.name);
-        };
+            button.onclick = function() {
+                openFolder(playlist.name);
+            };
 
-        foldersDiv.appendChild(button);
-    });
+            foldersDiv.appendChild(button);
+        });
+
+    } catch (error) {
+        alert("Could not display folders: " + error.message);
+    }
 }
 
 // ========================================
@@ -290,22 +297,27 @@ backButton.onclick = async function() {
 //              IMPORT FOLDER
 // ========================================
 
-importFolderButton.onclick = function() {
+importFolderButton.addEventListener("click", function() {
     folderInput.click();
-};
+});
 
-folderInput.onchange = async function() {
-    const files = Array.from(folderInput.files);
+folderInput.addEventListener("change", async function() {
+    const files = Array.from(folderInput.files || []);
 
-    if (files.length === 0) return;
+    if (files.length === 0) {
+        alert("Safari did not return any files. Please try selecting the folder again.");
+        return;
+    }
 
     let imported = 0;
+    let skipped = 0;
+
     const folderNames = new Set();
 
     try {
         for (const file of files) {
-            const relativePath = file.webkitRelativePath || file.name;
-            const parts = relativePath.split("/");
+            const relativePath = file.webkitRelativePath || "";
+            const parts = relativePath.split("/").filter(Boolean);
 
             const folderName = parts.length > 1
                 ? parts[0]
@@ -313,7 +325,12 @@ folderInput.onchange = async function() {
 
             folderNames.add(folderName);
 
-            if (!file.name.toLowerCase().endsWith(".mp3")) {
+            const isMp3 =
+                file.name.toLowerCase().endsWith(".mp3") ||
+                file.type === "audio/mpeg";
+
+            if (!isMp3) {
+                skipped++;
                 continue;
             }
 
@@ -333,15 +350,23 @@ folderInput.onchange = async function() {
 
         await renderFolders();
 
-        alert(imported + " songs imported!");
+        alert(
+            "Folder import finished!\n\n" +
+            "Songs imported: " + imported +
+            "\nFiles skipped: " + skipped
+        );
 
     } catch (error) {
-        console.error(error);
-        alert("Folder import failed: " + error.message);
+        console.error("Folder import error:", error);
+
+        alert(
+            "Folder import failed.\n" +
+            error.name + ": " + error.message
+        );
     }
 
     folderInput.value = "";
-};
+});
 
 // ========================================
 //              ADD SONGS
@@ -353,23 +378,28 @@ addSongsButton.onclick = function() {
     }
 };
 
-songInput.onchange = async function() {
-    const files = Array.from(songInput.files);
+songInput.addEventListener("change", async function() {
+    const files = Array.from(songInput.files || []);
 
     if (!currentFolder) {
         alert("Open a folder first.");
         return;
     }
 
-    if (files.length === 0) return;
+    if (files.length === 0) {
+        alert("No songs were selected.");
+        return;
+    }
 
     let imported = 0;
 
     try {
         for (const file of files) {
-            if (!file.name.toLowerCase().endsWith(".mp3")) {
-                continue;
-            }
+            const isMp3 =
+                file.name.toLowerCase().endsWith(".mp3") ||
+                file.type === "audio/mpeg";
+
+            if (!isMp3) continue;
 
             await saveSong({
                 id: currentFolder + "/" + createSongId(),
@@ -386,8 +416,12 @@ songInput.onchange = async function() {
         alert(imported + " songs added!");
 
     } catch (error) {
-        console.error(error);
-        alert("Could not add songs: " + error.message);
+        console.error("Add songs error:", error);
+
+        alert(
+            "Could not add songs.\n" +
+            error.name + ": " + error.message
+        );
     }
 
     songInput.value = "";
