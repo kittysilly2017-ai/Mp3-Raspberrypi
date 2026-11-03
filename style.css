@@ -1,3 +1,7 @@
+/* ========================================
+              MUSIC PLAYER
+======================================== */
+
 * {
     box-sizing: border-box;
 }
@@ -9,6 +13,10 @@ body {
     padding: 25px;
 }
 
+/* ========================================
+              PLAYER PANEL
+======================================== */
+
 .player {
     background: #cecece;
     min-height: 90vh;
@@ -16,10 +24,23 @@ body {
     border-radius: 4px;
 }
 
+/* ========================================
+              HEADINGS
+======================================== */
+
 h2 {
     color: #192d4c;
     font-size: 34px;
 }
+
+h3 {
+    color: #192d4c;
+    font-size: 25px;
+}
+
+/* ========================================
+              FOLDERS
+======================================== */
 
 .folders {
     display: flex;
@@ -45,6 +66,10 @@ h2 {
     font-size: 19px;
     color: black;
 }
+
+/* ========================================
+              PLAYLIST
+======================================== */
 
 #playlist {
     margin-top: 25px;
@@ -74,6 +99,10 @@ h2 {
     color: #ed3838;
 }
 
+/* ========================================
+              IMPORT BUTTONS
+======================================== */
+
 .import {
     margin-top: 40px;
     display: flex;
@@ -81,7 +110,9 @@ h2 {
     gap: 8px;
 }
 
-.import button {
+.import button,
+#addSongs,
+#back {
     padding: 13px 18px;
     border: 2px solid #9c75bd;
     background: #d9b8ed;
@@ -91,6 +122,42 @@ h2 {
     cursor: pointer;
 }
 
+/* ========================================
+              BUTTON EFFECTS
+======================================== */
+
 button:active {
     opacity: 0.7;
+}
+
+/* ========================================
+              MOBILE LAYOUT
+======================================== */
+
+@media (max-width: 600px) {
+
+    body {
+        padding: 12px;
+    }
+
+    .player {
+        padding: 35px 20px;
+    }
+
+    h2 {
+        font-size: 28px;
+    }
+
+    .folders {
+        gap: 20px;
+    }
+
+    .folder-icon {
+        font-size: 55px;
+    }
+
+    .folder-name {
+        font-size: 16px;
+    }
+
 }
